@@ -50,6 +50,10 @@ function doaptget {
 
     # Install lynx
     sudo apt-get -y install lynx
+
+    # Install packages for: https://www.mediawiki.org/wiki/Mathoid
+    sudo apt-get -y install nodejs nodejs-legacy nodejs-dev npm mocha librsvg2-dev pkg-config git
+    sudo npm install -g mathoid
 }
 
 # This program enables you to improve the security of your MySQL
@@ -207,6 +211,8 @@ function doinstall {
 
     dogetcomposer
     dogetwikimedia
+
+
     doapache
     doapacheweb
 
