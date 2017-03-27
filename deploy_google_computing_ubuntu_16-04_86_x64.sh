@@ -50,10 +50,6 @@ function doaptget {
 
     # Install lynx
     sudo apt-get -y install lynx
-
-    # Install packages for: https://www.mediawiki.org/wiki/Mathoid
-    sudo apt-get -y install nodejs nodejs-legacy nodejs-dev npm mocha librsvg2-dev pkg-config git
-    sudo npm install -g mathoid
 }
 
 # This program enables you to improve the security of your MySQL
@@ -107,7 +103,7 @@ function domysql {
 
     # Create user
     mysql -h localhost -u root -p"$ROOTPASSWD" -e "uninstall plugin validate_password;"
-    mysql -u root -p"$ROOTPASSWD" -e "CREATE USERDB '$USERDB'@'localhost' IDENTIFIED BY '$USERDBPASSWD';"
+    mysql -u root -p"$ROOTPASSWD" -e "CREATE USER '$USERDB'@'localhost' IDENTIFIED BY '$USERDBPASSWD';"
 
     # See the users grants
     mysql -u root -p"$ROOTPASSWD" -e 'select host, user from mysql.user;'
@@ -152,6 +148,11 @@ function dogetwikimedia {
         # Enable composer
         cd /var/www/html/$DOMAIN
         composer install --no-dev
+
+        # Install packages for: https://www.mediawiki.org/wiki/Extension:Math
+        cd /var/www/html/$DOMAIN/extensions/Math
+        sudo apt-get -y install build-essential ocaml
+        make
     fi
 }
 
