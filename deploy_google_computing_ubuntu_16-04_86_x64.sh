@@ -92,6 +92,7 @@ function dogetvar {
 }
 
 # Change mysql settings
+# Get inspiration from: http://homeroam.wikidot.com/daloradius-0-9-9#toc6
 function domysql {
     # Create new database
     mysql -u root -p"$ROOTPASSWD" -e "CREATE DATABASE $DATABASE CHARACTER SET utf8;"
@@ -108,32 +109,30 @@ function domysql {
     mysql -u root -p"$ROOTPASSWD" -e 'FLUSH PRIVILEGES;'
 }
 
-# From the wiki, get current versions
-function dogetversion {
-    WIKIV=`lynx -dump "https://www.mediawiki.org/wiki/Download" | grep "Download MediaWiki" | head -n 1 | cut -d"]" -f 3 | cut -d" " -f3`
-    WIKIVT=`echo $WIKIV | cut -d"." -f1-2`
-    echo "Current version of wikimedia is: $WIKIV"
-}
-
-
 # Get latest compiled version of wikimedia
 function dogetwikimedia {
-    mkdir -p "$HOME/Downloads"
-    cd "$HOME/Downloads"
-    if [ ! -d "$HOME/Downloads/mediawiki-$WIKIV" ]; then
-        curl https://releases.wikimedia.org/mediawiki/$WIKIVT/mediawiki-$WIKIV.tar.gz -o mediawiki-$WIKIV.tar.gz
-        tar -xvzf mediawiki-$WIKIV.tar.gz
-        rm mediawiki-$WIKIV.tar.gz
-    fi
+    # See https://www.mediawiki.org/wiki/Download_from_Git
+    if [ ! -d "/var/www/html/$DOMAIN" ]; then
+        cd /var/www/html
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git $DOMAIN
 
-    # Move the files
-    if [ ! -d "/var/www/html/mediawiki" ]; then
-        sudo mkdir -p /var/www/html/mediawi
-        sudo mv "$HOME/Downloads/mediawiki-$WIKIV" "/var/www/html/mediawiki"
+        # Get extensions
+        cd /var/www/html/$DOMAIN
+        rm -rf extensions
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions.git
+        cd extensions
+        git submodule update --init --recursive
+
+        # Get skins
+        cd /var/www/html/$DOMAIN
+        rm -rf skins
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/skins.git
+        cd skins
+        git submodule update --init --recursive
     fi
 
     #Change the ownership of mediawiki directory to www-data:
-    sudo www-data:www-data -R /var/www/html/mediawiki
+    sudo www-data:www-data -R /var/www/html/$DOMAIN
 }
 
 # Change apache settings
@@ -147,8 +146,6 @@ function doapache {
     sudo service apache2 restart
 }
 
-
-
 # Combine functions
 function doinstall {
     doaptget
@@ -157,10 +154,12 @@ function doinstall {
     dogetvar
     domysql
 
-    dogetversion
     dogetwikimedia
     doapache
 
-    echo "Please visit for installation: http://SERVER-IP/mediawiki"
+    echo "Please visit for installation: http://SERVER-IP/$DOMAIN"
+    echo "Your domain is: $DOMAIN"
+    echo "Your MySQL database is: $DATABASE"
+    echo "Your MySQL username is: $USER"
 }
 
