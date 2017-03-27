@@ -49,12 +49,72 @@ function doaptget {
     sudo apt-get -y install lynx
 }
 
+# This program enables you to improve the security of your MySQL
+function domysqlsecure {
+    mysql_secure_installation
+}
+
+function dogetvar {
+    DEFDOMAIN="domain.com"
+    unset DOMAIN
+    read -p "What is the domain for the site [$DEFDOMAIN]:" DOMAIN
+    DOMAIN=${DOMAIN:-$DEFDOMAIN}
+    echo -e "You entered: $DOMAIN"
+    echo ""
+
+    DEFDATABASE=`echo $DOMAIN | tr "." _`
+    unset DATABASE
+    read -p "What should the MySQL database the site be named [$DEFDATABASE]:" DATABASE
+    DATABASE=${DATABASE:-$DEFDATABASE}
+    echo -e "You entered: $DATABASE"
+    echo ""
+
+    DEFUSER="user_$DATABASE"
+    unset USER
+    read -p "What should the MySQL username for the database be named [$DEFUSER]:" USER
+    USER=${USER:-$DEFUSER}
+    echo -e "You entered: $USER"
+    echo ""
+
+    DEFUSERPASSWD="PASSWORD"
+    unset USERPASSWD
+    read -p "What should the password for the MySQL username be [$DEFUSERPASSWD]:" USERPASSWD
+    USERPASSWD=${USERPASSWD:-$DEFUSERPASSWD}
+    echo -e "You entered: $USERPASSWD"
+    echo ""
+
+    DEFROOTPASSWD="PASSWORD"
+    unset ROOTPASSWD
+    read -p "What is the password for the MySQL root? [$DEFROOTPASSWD]:" ROOTPASSWD
+    ROOTPASSWD=${ROOTPASSWD:-$DEFROOTPASSWD}
+    echo -e "You entered: $ROOTPASSWD"
+    echo ""
+}
+
+# Change mysql settings
+function domysql {
+    # Create new database
+    mysql -u root -p"$ROOTPASSWD" -e "CREATE DATABASE $DATABASE CHARACTER SET utf8;"
+    mysql -u root -p"$ROOTPASSWD" -e 'show databases;'
+
+    # Create user
+    mysql -h localhost -u root -p"$ROOTPASSWD" -e "uninstall plugin validate_password;"
+    mysql -u root -p"$ROOTPASSWD" -e "CREATE USER '$USER'@'localhost' IDENTIFIED BY '$USERPASSWD';"
+
+    # See the users grants
+    mysql -u root -p"$ROOTPASSWD" -e 'select host, user from mysql.user;'
+    mysql -u root -p"$ROOTPASSWD" -e "GRANT ALL PRIVILEGES ON $DATABASE.* TO '$USER'@'localhost';"
+    mysql -u root -p"$ROOTPASSWD" -e 'SELECT user, host, db, select_priv, insert_priv, grant_priv FROM mysql.db'
+    mysql -u root -p"$ROOTPASSWD" -e 'FLUSH PRIVILEGES;'
+}
+
 # From the wiki, get current versions
 function dogetversion {
     WIKIV=`lynx -dump "https://www.mediawiki.org/wiki/Download" | grep "Download MediaWiki" | head -n 1 | cut -d"]" -f 3 | cut -d" " -f3`
     WIKIVT=`echo $WIKIV | cut -d"." -f1-2`
     echo "Current version of wikimedia is: $WIKIV"
 }
+
 
 # Get latest compiled version of wikimedia
 function dogetwikimedia {
@@ -87,18 +147,19 @@ function doapache {
     sudo service apache2 restart
 }
 
-# Change apache settings
-function domysql {
-    mysql_secure_installation
-}
+
 
 # Combine functions
 function doinstall {
     doaptget
+
+    domysqlsecure
+    dogetvar
+    domysql
+
     dogetversion
     dogetwikimedia
     doapache
-    domysql
 
     echo "Please visit for installation: http://SERVER-IP/mediawiki"
 }
