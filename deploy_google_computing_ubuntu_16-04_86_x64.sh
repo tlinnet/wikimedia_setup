@@ -72,18 +72,18 @@ function dogetvar {
     echo -e "You entered: $DATABASE"
     echo ""
 
-    DEFUSER="user_$DATABASE"
-    unset USER
-    read -p "What should the MySQL username for the database be named [$DEFUSER]:" USER
-    USER=${USER:-$DEFUSER}
-    echo -e "You entered: $USER"
+    DEFUSERDB="user_$DATABASE"
+    unset USERDB
+    read -p "What should the MySQL username for the database be named [$DEFUSERDB]:" USERDB
+    USERDB=${USERDB:-$DEFUSERDB}
+    echo -e "You entered: $USERDB"
     echo ""
 
-    DEFUSERPASSWD="PASSWORD"
-    unset USERPASSWD
-    read -p "What should the password for the MySQL username be [$DEFUSERPASSWD]:" USERPASSWD
-    USERPASSWD=${USERPASSWD:-$DEFUSERPASSWD}
-    echo -e "You entered: $USERPASSWD"
+    DEFUSERDBPASSWD="PASSWORD"
+    unset USERDBPASSWD
+    read -p "What should the password for the MySQL username be [$DEFUSERDBPASSWD]:" USERDBPASSWD
+    USERDBPASSWD=${USERDBPASSWD:-$DEFUSERDBPASSWD}
+    echo -e "You entered: $USERDBPASSWD"
     echo ""
 
     DEFROOTPASSWD="PASSWORD"
@@ -103,11 +103,11 @@ function domysql {
 
     # Create user
     mysql -h localhost -u root -p"$ROOTPASSWD" -e "uninstall plugin validate_password;"
-    mysql -u root -p"$ROOTPASSWD" -e "CREATE USER '$USER'@'localhost' IDENTIFIED BY '$USERPASSWD';"
+    mysql -u root -p"$ROOTPASSWD" -e "CREATE USERDB '$USERDB'@'localhost' IDENTIFIED BY '$USERDBPASSWD';"
 
     # See the users grants
     mysql -u root -p"$ROOTPASSWD" -e 'select host, user from mysql.user;'
-    mysql -u root -p"$ROOTPASSWD" -e "GRANT ALL PRIVILEGES ON $DATABASE.* TO '$USER'@'localhost';"
+    mysql -u root -p"$ROOTPASSWD" -e "GRANT ALL PRIVILEGES ON $DATABASE.* TO '$USERDB'@'localhost';"
     mysql -u root -p"$ROOTPASSWD" -e 'SELECT user, host, db, select_priv, insert_priv, grant_priv FROM mysql.db'
     mysql -u root -p"$ROOTPASSWD" -e 'FLUSH PRIVILEGES;'
 }
@@ -125,32 +125,31 @@ function dogetcomposer {
 # Get latest compiled version of wikimedia
 function dogetwikimedia {
     # See https://www.mediawiki.org/wiki/Download_from_Git
+    sudo chown -R $USER:www-data /var/www/html
+    sudo chmod -R 640 /var/www/html
+
     if [ ! -d "/var/www/html/$DOMAIN" ]; then
         cd /var/www/html
-        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git $DOMAIN
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git $DOMAIN
 
         # Get extensions
         cd /var/www/html/$DOMAIN
-        sudo rm -rf extensions
-        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions.git
+        rm -rf extensions
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions.git
         cd extensions
-        sudo git submodule update --init --recursive
+        git submodule update --init --recursive
 
         # Get skins
         cd /var/www/html/$DOMAIN
-        sudo rm -rf skins
-        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/skins.git
+        rm -rf skins
+        git clone https://gerrit.wikimedia.org/r/p/mediawiki/skins.git
         cd skins
-        sudo git submodule update --init --recursive
+        git submodule update --init --recursive
 
         # Enable composer
         cd /var/www/html/$DOMAIN
-        sudo composer install --no-dev
-
+        composer install --no-dev
     fi
-
-    #Change the ownership of mediawiki directory to www-data:
-    sudo chown www-data:www-data -R /var/www/html/$DOMAIN
 }
 
 # Change apache settings
@@ -161,6 +160,33 @@ function doapache {
 
     # Enable Apache rewrite module
     sudo a2enmod rewrite
+    sudo service apache2 restart
+}
+
+function doapacheweb {
+    # Disable default site
+    cat /etc/apache2/sites-enabled/000-default.conf
+    sudo a2dissite 000-default
+
+    cd $HOME
+    echo '<VirtualHost *:80>' > $DOMAIN.conf
+    echo "DocumentRoot /var/www/html/${DOMAIN}/" >> $DOMAIN.conf
+    echo "ServerName ${DOMAIN}/" >> $DOMAIN.conf
+    echo "ServerAlias www.${DOMAIN}/" >> $DOMAIN.conf
+    echo "<Directory /var/www/html/${DOMAIN}/>" >> $DOMAIN.conf
+    echo "Options FollowSymLinks" >> $DOMAIN.conf
+    echo "AllowOverride All" >> $DOMAIN.conf
+    echo "Order allow,deny" >> $DOMAIN.conf
+    echo "allow from all" >> $DOMAIN.conf
+    echo '</Directory>' >> $DOMAIN.conf
+    echo "ErrorLog /var/log/apache2/${DOMAIN}-error_log" >> $DOMAIN.conf
+    echo "CustomLog /var/log/apache2/${DOMAIN}-access_log common" >> $DOMAIN.conf
+    echo '</VirtualHost>' >> $DOMAIN.conf
+    cat $DOMAIN.conf
+    #
+    sudo cp $DOMAIN.conf /etc/apache2/sites-available/
+    ls -la /etc/apache2/sites-available/
+    sudo a2ensite $DOMAIN
     sudo service apache2 restart
 }
 
@@ -183,12 +209,13 @@ function doinstall {
     dogetcomposer
     dogetwikimedia
     doapache
+    doapacheweb
 
     dobin
 
     echo "Please visit for installation: http://SERVER-IP/$DOMAIN"
     echo "Your domain is: $DOMAIN"
     echo "Your MySQL database is: $DATABASE"
-    echo "Your MySQL username is: $USER"
+    echo "Your MySQL username is: $USERDB"
 }
 
