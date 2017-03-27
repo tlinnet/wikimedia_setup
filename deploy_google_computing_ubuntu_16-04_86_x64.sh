@@ -126,7 +126,6 @@ function dogetcomposer {
 function dogetwikimedia {
     # See https://www.mediawiki.org/wiki/Download_from_Git
     sudo chown -R $USER:www-data /var/www/html
-    sudo chmod -R 640 /var/www/html
 
     if [ ! -d "/var/www/html/$DOMAIN" ]; then
         cd /var/www/html
