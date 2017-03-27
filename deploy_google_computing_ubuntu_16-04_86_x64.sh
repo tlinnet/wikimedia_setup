@@ -146,6 +146,14 @@ function doapache {
     sudo service apache2 restart
 }
 
+# Make home bin
+function dobin {
+  mkdir -p $HOME/bin
+  echo '' >> $HOME/.bashrc
+  echo 'export PATH=$PATH:$HOME/bin' >> $HOME/.bashrc
+  source $HOME/.bashrc
+}
+
 # Combine functions
 function doinstall {
     doaptget
@@ -156,6 +164,8 @@ function doinstall {
 
     dogetwikimedia
     doapache
+
+    dobin
 
     echo "Please visit for installation: http://SERVER-IP/$DOMAIN"
     echo "Your domain is: $DOMAIN"
