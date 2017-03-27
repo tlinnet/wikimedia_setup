@@ -2,6 +2,10 @@
 # -*- coding: UTF-8 -*-
 # Script for deploying wikimedia on Google Cloud Computing GCC
 
+# Guide taken from:
+# https://www.mediawiki.org/wiki/Manual:Running_MediaWiki_on_Debian_or_Ubuntu
+# https://help.ubuntu.com/community/MediaWiki
+
 # Install apt-get packages
 function doaptget {
     sudo apt-get -y update
@@ -33,14 +37,12 @@ function doaptget {
     sudo apt-get -y install lynx
 }
 
+# From the wiki, get current versions
 function dogetversion {
-    # From the wiki, get current versions
     WIKIV=`lynx -dump "https://www.mediawiki.org/wiki/Download" | grep "Download MediaWiki" | head -n 1 | cut -d"]" -f 3 | cut -d" " -f3`
     WIKIVT=`echo $WIKIV | cut -d"." -f1-2`
-
     echo "Current version of wikimedia is: $WIKIV"
 }
-
 
 # Get latest compiled version of relax
 function dogetwikimedia {
@@ -52,14 +54,32 @@ function dogetwikimedia {
         rm mediawiki-$WIKIV.tar.gz
     fi
 
+    # Move the files
     if [ ! -d "/var/lib/mediawiki" ]; then
         sudo mkdir -p /var/lib/mediawi
         sudo mv "$HOME/Downloads/mediawiki-$WIKIV" "/var/lib/mediawiki"
     fi
+
+    # Make a link
+    sudo ln -s /var/lib/mediawiki /var/www/html/mediawiki
+}
+
+# Change apache settings
+function doapache {
+    # Change Maximum upload file size
+    sudo sed -i 's/upload_max_filesize = 2M/upload_max_filesize = 200M/' /etc/php/7.0/apache2/php.ini
+    grep "upload_max_filesize" /etc/php/7.0/apache2/php.ini
+
+    # Enable Apache rewrite module
+    sudo a2enmod rewrite
+    sudo service apache2 restart
 }
 
 # Combine functions
 function doinstall {
+    doaptget
     dogetversion
     dogetwikimedia
+    doapache
 }
+
