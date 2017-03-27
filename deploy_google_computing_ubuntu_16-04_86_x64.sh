@@ -114,25 +114,25 @@ function dogetwikimedia {
     # See https://www.mediawiki.org/wiki/Download_from_Git
     if [ ! -d "/var/www/html/$DOMAIN" ]; then
         cd /var/www/html
-        git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git $DOMAIN
+        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/core.git $DOMAIN
 
         # Get extensions
         cd /var/www/html/$DOMAIN
-        rm -rf extensions
-        git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions.git
+        sudo rm -rf extensions
+        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/extensions.git
         cd extensions
-        git submodule update --init --recursive
+        sudo git submodule update --init --recursive
 
         # Get skins
         cd /var/www/html/$DOMAIN
-        rm -rf skins
-        git clone https://gerrit.wikimedia.org/r/p/mediawiki/skins.git
+        sudo rm -rf skins
+        sudo git clone https://gerrit.wikimedia.org/r/p/mediawiki/skins.git
         cd skins
-        git submodule update --init --recursive
+        sudo git submodule update --init --recursive
     fi
 
     #Change the ownership of mediawiki directory to www-data:
-    sudo www-data:www-data -R /var/www/html/$DOMAIN
+    sudo chown www-data:www-data -R /var/www/html/$DOMAIN
 }
 
 # Change apache settings
