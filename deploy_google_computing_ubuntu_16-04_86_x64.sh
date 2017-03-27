@@ -6,6 +6,7 @@
 # https://www.mediawiki.org/wiki/Manual:Running_MediaWiki_on_Debian_or_Ubuntu
 # https://help.ubuntu.com/community/MediaWiki
 # https://hostpresto.com/community/tutorials/how-to-install-and-configure-mediawiki-on-ubuntu-16-04/
+# https://www.rosehosting.com/blog/how-to-install-mediawiki-on-an-ubuntu-16-04-vps/
 
 # Install apt-get packages
 function doaptget {
@@ -86,12 +87,18 @@ function doapache {
     sudo service apache2 restart
 }
 
+# Change apache settings
+function domysql {
+    mysql_secure_installation
+}
+
 # Combine functions
 function doinstall {
     doaptget
     dogetversion
     dogetwikimedia
     doapache
+    domysql
 
     echo "Please visit for installation: http://SERVER-IP/mediawiki"
 }
