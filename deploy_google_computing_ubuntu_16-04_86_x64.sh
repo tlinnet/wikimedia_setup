@@ -53,6 +53,9 @@ function doaptget {
     sudo apt-get -y install texlive-latex-recommended texlive-fonts-recommended texlive-lang-greek dvipng
     sudo apt-get -y install build-essential ocaml
 
+    # https://www.mediawiki.org/wiki/Extension:PdfHandler
+    sudo apt-get -y install xpdf-utils ghostscript imagemagick
+
     # Install lynx
     sudo apt-get -y install lynx
 }
