@@ -150,6 +150,7 @@ function dogetwikimedia {
         composer install --no-dev
 
         # Install packages for: https://www.mediawiki.org/wiki/Extension:Math
+        sudo apt-get -y install texlive dvipng
         cd /var/www/html/$DOMAIN/extensions/Math
         sudo apt-get -y install build-essential ocaml
         make
