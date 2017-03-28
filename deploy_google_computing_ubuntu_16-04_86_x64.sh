@@ -48,6 +48,11 @@ function doaptget {
     # Inkscape	inkscape	Alternative means of SVG thumbnailing, than ImageMagick. Sometimes it will render SVGs better if originally created in Inkscape.
     sudo apt-get -y install inkscape
 
+    # Install packages for: https://www.mediawiki.org/wiki/Extension:Math
+    # https://www.mediawiki.org/wiki/Extension:Math/advancedSettings
+    sudo apt-get -y install texlive-latex-recommended texlive-fonts-recommended texlive-lang-greek dvipng
+    sudo apt-get -y install build-essential ocaml
+
     # Install lynx
     sudo apt-get -y install lynx
 }
@@ -149,11 +154,11 @@ function dogetwikimedia {
         cd /var/www/html/$DOMAIN
         composer install --no-dev
 
-        # Install packages for: https://www.mediawiki.org/wiki/Extension:Math
-        sudo apt-get -y install texlive dvipng
+        # https://www.mediawiki.org/wiki/Extension:Math/advancedSettings#On_a_host_with_full_shell_access
+        # Build texvc
         cd /var/www/html/$DOMAIN/extensions/Math
-        sudo apt-get -y install build-essential ocaml
         make
+        cd $HOME
     fi
 }
 
@@ -213,7 +218,6 @@ function doinstall {
 
     dogetcomposer
     dogetwikimedia
-
 
     doapache
     doapacheweb
