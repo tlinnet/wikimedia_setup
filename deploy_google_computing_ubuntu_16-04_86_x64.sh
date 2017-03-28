@@ -50,8 +50,8 @@ function doaptget {
 
     # Install packages for: https://www.mediawiki.org/wiki/Extension:Math
     # https://www.mediawiki.org/wiki/Extension:Math/advancedSettings
-    sudo apt-get -y install texlive-latex-recommended texlive-fonts-recommended texlive-lang-greek dvipng
-    sudo apt-get -y install build-essential ocaml
+    #sudo apt-get -y install texlive-latex-recommended texlive-fonts-recommended texlive-lang-greek dvipng
+    #sudo apt-get -y install build-essential ocaml
 
     # https://www.mediawiki.org/wiki/Extension:PdfHandler
     sudo apt-get -y install xpdf-utils ghostscript imagemagick
@@ -157,11 +157,11 @@ function dogetwikimedia {
         cd /var/www/html/$DOMAIN
         composer install --no-dev
 
-        # https://www.mediawiki.org/wiki/Extension:Math/advancedSettings#On_a_host_with_full_shell_access
-        # Build texvc
-        cd /var/www/html/$DOMAIN/extensions/Math
-        make
-        cd $HOME
+        ## https://www.mediawiki.org/wiki/Extension:Math/advancedSettings#On_a_host_with_full_shell_access
+        ## Build texvc
+        #cd /var/www/html/$DOMAIN/extensions/Math
+        #make
+        #cd $HOME
     fi
 }
 
